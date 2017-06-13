@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Set the desktop wallpaper.
+#
+# Use:
+# $ background_set <file>
+#
+file="${1}"
+width="$( identify -format "%w" "${file}" )"
+height="$( identify -format "%h" "${file}" )"
+min_height="720"
+min_width="$min_height"
+if [ "$width" -lt "$min_width" ] || [ "$height" -lt "$min_height" ]
+then
+  feh --bg-center $file
+else
+  feh --bg-fill $file
+fi
+
+# Other feh options:
+#feh --bg-fill ~/bg/.bg
+#feh --bg-scale ~/bg/.bg
+#feh --bg-center ~/bg/.bg
+#feh --bg-tile ~/bg/.bg
+#feh --bg-max ~/bg/.bg

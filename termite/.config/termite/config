@@ -1,0 +1,15 @@
+[options]
+scrollback_lines=100000
+font=Monospace 10
+font=Inconsolata 14
+font=LiberationMono Regular 12
+audible_bell = false
+visible_bell = false
+allow_bold=true
+cursor_blink = off
+cursor = None
+# "block", "underline" or "ibeam"
+[colors]
+foreground = #ffffff
+#background = #000000
+background = rgba(0, 0, 0, 0.5)

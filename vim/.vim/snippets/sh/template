@@ -1,0 +1,51 @@
+#!/usr/bin/env sh
+# !!script_name!!
+help='
+!!script_full_name!!
+!!script_decription!!
+Usage:
+    !!script_name!! [ -h | --help ]
+    !!script_name!! !!script_options!!
+'
+
+
+function main
+{
+    # Check for stdin
+    if tty >/dev/null  ; then
+      # No stdin
+      stdin=''
+    else
+      # Read stdin
+      stdin=$(</dev/stdin)
+    fi
+
+    # Check for help flags
+    help_check=$( echo "$*" | tr ' ' '\n' | grep --ignore-case '^\(-\|--\)\(h\|help\)$' )
+
+    # Process stdin and command arguments
+    if [ "$help_check" != '' ] ; then
+        # Log help
+        echo "$help"
+        exit 0
+
+    # Stdin and command argument behaviour
+    elif [ "$*" != '' ] && [ "$stdin" != '' ] ; then
+        :
+
+    # Command argument behaviour
+    elif [ "$*" != '' ] ; then
+        :
+
+    # Stdin behaviour
+    elif [ "$stdin" != '' ] ; then
+        :
+
+    # Default behaviour
+    else
+        !!default_behavior!!
+    fi
+}
+
+main $*
+

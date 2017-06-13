@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# randomize and load a desktop wallpaper
+sh ~/.config/scripts/background_random | xargs ~/.config/scripts/background_set

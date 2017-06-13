@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Get the current time in a nice format.
+date +"%Y-%m-%d %H:%M"

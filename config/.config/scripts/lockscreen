@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+#source="$(${HOME}/.config/scripts/background_random)"
+#ffmpeg -y -i "${source}" ~/.lockscreen.png
+
+sh ~/.config/scripts/screenshot ~/.lockscreen.png
+
+# Filter out white text (experiemental)
+#sh ~/.config/scripts/lockscreen_filter ~/.lockscreen.png ~/.lockscreen.png
+
+# pixelate
+python ~/.config/scripts/lockscreen_pixelate.py ~/.lockscreen.png ~/.lockscreen.png 10
+
+i3lock -u -i ~/.lockscreen.png

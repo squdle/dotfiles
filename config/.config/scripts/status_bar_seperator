@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# Add a bar to the output if the input value is not empty.
+# Call as:
+# status_bar_seperator <value> <seperator>
+if  [ "${1}" != ""  ] ; then
+  echo "${1} ${2} "
+fi

@@ -1,0 +1,14 @@
+# i3blocks config file
+#
+# Please see man i3blocks for a complete reference!
+# The man page is also hosted at http://vivien.github.io/i3blocks
+#
+
+# STATUS
+[status]
+command=echo 'taskbar' | tcsh -s
+interval=5
+# Force some transparency if possible
+[transparency]
+command=sh -c 'transset-df -n i3bar 0.6 2&> /dev/null'
+interval=1

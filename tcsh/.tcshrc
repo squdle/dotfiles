@@ -1,0 +1,180 @@
+# ~/.config/.tcshrc
+#
+# tcsh dotfile
+#
+# Set up a dynamic prompt that can be switched on the fly, and some useful aliases.
+#
+# Either use this setup either use directly or modify the variables in "~/.config/variables",
+# and then include this file in your normal tcsh dotfile.
+# E.g inside of ~/.tcshrc put:
+# source ~/.config/.tcshrc
+
+# Ensure that the config scripts are on PATH.
+set PATH = "${PATH}:${HOME}/.config/scripts" 
+
+# Let tcsh do completion.
+set filec
+set autolist=ambiguous
+set complete=enhance
+
+# VARIABLES
+# =========
+# Generate tcsh variables from generic variables file.
+eval `python -c 'from sys import stdin; [print("set " + i) for i in stdin.readlines() if "=" in i]' < ~/.config/variables`
+# In sh, bash, etc  this would simply be:
+# source ~/.config/variables
+
+# SPLASH SCREEN
+# =============
+alias splash "cat ${SPLASH}"
+if ($SPLASH_ON == 1) then
+    splash
+endif
+
+# PYTHON SANDBOX
+# ==============
+# Sets up a local python user sandbox. Set before prompt as this modifies PS1.
+# This will be ignored if not found.
+source ~/python/venv/bin/activate.csh > & /dev/null
+
+# PROMPT
+# ======
+# Set the value of PS1 and the pre prompt command
+# Change prompt on the fly with: p, pp, ppp, pppp, ppppp OR p[1-5]
+# where : p1 = static simple, p2 = static, P3 = dynamic simple, P4 = dynamic detailed, P5 = status bar
+#
+# Add information to the p5 status prompt by changing the value of STATUS_CUSTOM in ~/.config/variables.
+# To modify the prompts themselves change the prompt settings section below.
+
+# Set basic prompt just in case custom prompt fails.
+set prompt = '$ '
+
+# Get prompt from config.
+set PS = "${PROMPT}"
+set prompt = "${PS}"
+
+
+# PROMPT FUNCTIONS
+# ----------------
+# Resets prompt to value in config
+alias reset_prompt 'set prompt = "${PROMPT}"'
+# Returns the location of the current nested shell or none.
+alias shell_name 'echo "${0}" | grep -v "-" '
+# Returns the current git branch.
+set branch_format = 'import sys; x=sys.stdin.read().replace("* ", "*").rstrip(); print(x)'
+alias branchname 'git branch | & grep "*" | python -c "${branch_format}" '
+# Returns the current directory basename
+alias pwd_basename 'pwd | xargs basename'
+# Returns the current utc time.
+alias date_formatted_utc 'date +"%Y-%m-%dT%H%M%S"'
+
+# Prompt settings
+# ----------------
+# *** Set the prompts here if you want to modify further! ***
+#
+# static pre prompts
+set PS1_1 = ""
+set PS1_2 = "[%N@%M:%C]"
+# dynamic pre prompts
+alias PS1_3 'echo -n "[`whoami`@`hostname`:`pwd_basename``branchname`]" '
+alias PS1_4 'echo -n "[ `shell_name`:`whoami`@`hostname`:`pwd``branchname` - `date_formatted_utc` ]\n" '
+set ECHO_STATUS_CUSTOM = 'echo "${STATUS_CUSTOM}"'
+alias PS1_5 'echo "$LEFT_SEPERATOR `shell_name`:`whoami`@`hostname`:`pwd``branchname` $SEPERATOR `eval $ECHO_STATUS_CUSTOM` $RIGHT_SEPERATOR"'
+alias ppppp "alias precmd PS1_5 ; reset_prompt"
+# Make a simple taskbar version.
+alias taskbar 'echo " `eval $ECHO_STATUS_CUSTOM` "'
+
+# Prompt aliases
+# --------------
+## Set up the prompts so that may be switched at runtime.
+alias p 'set prompt = "${PS1_1}${PS}" ; unalias precmd ;  '
+alias pp 'set prompt = "${PS1_2}${PS}" ; unalias precmd ; '
+alias ppp "alias precmd PS1_3 ; reset_prompt"
+alias pppp "alias precmd PS1_4 ; reset_prompt"
+alias ppppp "alias precmd PS1_5 ; reset_prompt"
+## Note : precmd is run before each command, cwdcmd before change of directory, prompt is the actual prompt.
+##        i.e use precmd for more dynamic behaviour (time, git branch, etc), cwdcmd for more static, prompt for static/inbuilt
+alias P ppp 
+alias PP pppp
+alias PPP ppppp
+alias p1 p
+alias p2 pp
+alias p3 ppp
+alias p4 pppp
+alias p5 ppppp
+# Set the default prompt (p, pp, P or PP)
+switch("${START_PROMPT}")
+case "1":
+  p1
+  breaksw
+case "2":
+  p2
+  breaksw
+case "3":
+  p3
+  breaksw
+case "4":
+  p4
+  breaksw
+case "5":
+  p5
+  breaksw
+default:
+  breaksw
+endsw
+
+# ALIASES
+# =======
+
+# File manipulation
+# -----------------
+#
+# ls   - list
+# l    - list long
+# ll   - list long all
+# t    - tree
+# lf   - list files (relative path)
+# llf  - list files (absolute path)
+# lt   - list file types
+# modify any of these with : <operation><depth>
+#
+# mkd - make directory (and parents if needed)
+#
+# d - jump to projects folder
+# D - project folder name
+#
+alias ls 'ls --color=auto'
+alias l 'ls -l'
+alias ll 'ls -la'
+alias lf 'find . -maxdepth 1' 
+alias llf 'find `pwd` -maxdepth 1' 
+# filetypes
+set filetypes_command = "import sys; print( ' '.join( [ j for j in set(i.rstrip().split('.')[-1] for i in sys.stdin.readlines() if '.' in i) if j]))"
+alias lt 'find . | xargs basename -a $! | python -c "${filetypes_command}" '
+alias t 'tree'
+# depth modifier
+foreach i (1 2 3 4 5 6 8 9 10 11 12 13 14 15 16 17 18 19 20)
+    alias "${i}ls" "find . -maxdepth ${i} | xargs echo ls $! "
+    alias "${i}l" "find . -maxdepth ${i} | xargs ls -l $!"
+    alias "${i}ll" "find . -maxdepth ${i} | xargs ls -la $!"
+    alias "${i}lf" "find . -maxdepth ${i}"
+    alias "${i}llf" "find `pwd` -maxdepth ${i}"
+    set ltn_func = 'python -c "${filetypes_command}"'
+    alias "${i}lt" "find . -maxdepth ${i} | xargs basename -a | ${ltn_func}"
+    alias "${i}t" "tree -La ${i}"
+end
+# folders
+alias mkd 'mkdir -p'
+alias d "cd $PROJECTS"
+
+# dotfiles
+# --------
+alias rc_reload 'source ~/.config/.tcshrc'
+# Modify and reload this file
+alias rc '$TEXT_EDITOR ~/.config/.tcshrc; rc_reload'
+# Modify variables and reload this file
+alias rcv '$TEXT_EDITOR ~/.config/variables; rc_reload'
+# Modify splash.
+alias rcs '$TEXT_EDITOR $SPLASH; rc_reload'
+alias vimrc 'vim ~/.vimrc'
+

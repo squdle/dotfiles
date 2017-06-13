@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Select a random background from the ~/.config/bg folder.
+echo `find ~/bg/. | 
+python -c '
+from random import choice;
+from sys import stdin;
+print(choice(stdin.readlines()))
+'`
+

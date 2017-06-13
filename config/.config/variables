@@ -1,0 +1,42 @@
+#!/usr/bin/env sh
+# ~/.config/variables
+# Variables used by our dotfiles
+
+# VARIABLES
+# ---------
+TEXT_EDITOR="vim"
+BROWSER="qutebrowser"
+TERMINAL="termite"
+VIEWER="feh"
+PROJECTS="~/dev"
+PROMPT="$ "
+
+BG_FOLDER="~/bg"
+
+# Splash screen
+SPLASH="~/.config/splash"
+SPLASH_ON=0
+
+# Set start prompt to one of :
+# 1 minimal
+# 2 simple
+# 3 dynamic
+# 4 dynamic detailed
+# 5 status bar
+START_PROMPT="5"
+
+# Create a custom status bar section using environment variables.
+# Single quotes must be used, but commands can be exectued with back ticks.
+
+# status bar seperators
+SEPERATOR='|'
+LEFT_SEPERATOR='['
+RIGHT_SEPERATOR=']'
+
+# information to put in the status bar.
+wifi_status = 'eval status_bar_seperator `wifi` $SEPERATOR'
+battery_status = 'eval status_bar_seperator `battery` $SEPERATOR'
+
+# Uncomment the next line to skip any custom status
+STATUS_CUSTOM=' wifi:`wifi` $SEPERATOR volume:`volume` $SEPERATOR  battery:`battery` $SEPERATOR `timenow` '
+

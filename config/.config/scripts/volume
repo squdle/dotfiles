@@ -1,0 +1,94 @@
+#!/usr/bin/env sh
+# Manage system volume (wrapper script).
+help='
+volume 
+
+Manage system volume (wrapper script).
+
+Usage:
+     volume [ -h | --help ]
+     volume [ up | down | set ] <amount>
+     volume [ mute | unmute | toggle-mute]
+'
+
+function get_volume
+{
+    # Get the volume
+    volume="$(pamixer --get-volume)%"
+
+    # Check if mute
+    if [ $(pamixer --get-mute) = "true" ]; then
+        volume+='(mute)'
+    fi
+
+    # Return volume level.
+    echo "${volume}"
+}
+
+
+function set_volume
+{
+    case "${1}" in 
+        up)
+            pamixer --increase $2
+            ;;
+        down)
+            pamixer --decrease $2
+            ;;
+        set)
+            pamixer --set-volume $2
+            ;;
+        mute)
+            pamixer --mute
+            ;;
+        unmute)
+            pamixer --unmute
+            ;;
+        toggle-mute)
+            if [ "$(pamixer --get-mute)" == "true" ] ; then
+                pamixer --unmute
+	    else
+                pamixer --mute
+            fi
+            ;;
+        *)
+            echo "$help"
+    esac
+}
+
+function main
+{
+    # Check for stdin
+    if tty >/dev/null  ; then
+      # No stdin
+      stdin=''
+    else
+      # Read stdin
+      stdin=$(</dev/stdin)
+    fi
+
+    # Check for help flags
+    help_check=$( echo "$*" | tr ' ' '\n' | grep --ignore-case '^\(-\|--\)\(h\|help\)$' )
+
+    # Process stdin and arguments
+    if [ "$help_check" != '' ] ; then
+        # Log help
+        echo "$help"
+        exit 0
+    # Stdin and command argument behaviour
+    elif [ "$*" != '' ] && [ "$stdin" != '' ] ; then
+        get_volume
+    # Command argument behaviour
+    elif [ "$*" != '' ] ; then
+        set_volume $*
+    # Stdin behaviour
+    elif [ "$stdin" != '' ] ; then
+        :
+    # Default behaviour
+    else
+        get_volume
+    fi
+}
+
+main $*
+
