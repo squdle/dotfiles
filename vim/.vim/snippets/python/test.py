@@ -46,4 +46,3 @@ if __name__ == "__main__":
         module = sys.modules[__name__]
         suite = unittest.TestLoader().loadTestsFromModule(module)
         unittest.TextTestRunner(verbosity=2).run(suite)
-

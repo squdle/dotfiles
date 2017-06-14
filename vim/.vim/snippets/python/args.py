@@ -1,17 +1,19 @@
 import argparse
+
+
 def get_args():
     """
     Get command line arguments via argparse.
-    
+
     Returns:
-        argparse.Namespace : command line args as attributes of an object.   
+        argparse.Namespace : command line args as attributes of an object.
     """
     # Use class docstring for program description
     parser = argparse.ArgumentParser(
         description=__doc__
     )
     # Allow to specify options that conflict with each other.
-    verbosity_group = parser.add_mutually_exclusive_group()  
+    verbosity_group = parser.add_mutually_exclusive_group()
     verbosity_group.add_argument("-v", "--verbose", action="store_true")
     verbosity_group.add_argument("-q", "--quiet", action="store_true")
     # Get command line arguments.

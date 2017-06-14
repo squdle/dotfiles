@@ -22,14 +22,14 @@ class !!ClassName!!(object):
     def !!function!!(!!farg1!!, !!farg2!!, !!farg3!!, !!farg4!!, !!farg5!!):
         """
         !!description!!
-    
+
         Args:
             !!farg1!! (!!type1!!): !!farg1 description!!
             !!farg2!! (!!type2!!): !!farg2 description!!
             !!farg3!! (!!type3!!): !!farg3 description!!
             !!farg4!! (!!type4!!): !!farg4 description!!
             !!farg5!! (!!type5!!): !!farg5 description!!
-    
+
         Returns:
             (!!freturn type!!) !!return description!!
         """

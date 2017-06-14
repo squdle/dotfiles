@@ -337,13 +337,16 @@ nnoremap gp `[V`]
 nnoremap <leader>" lbi"<Esc>ea"<Esc> 
 nnoremap <leader>' lbi'<Esc>ea'<Esc> 
 
+" Pep8 and Linting
+" ----------------
+
 " Check that code is pep8 compliant (requires pep8 module)"
 function! Pep8()
     :normal! mxggVG
     :w !python -c "import sys, pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or 'PEP8 pass')"
     :normal! vv`x
 :endfunction
-nnoremap <leader>8 :call Pep8()<CR>
+autocmd FileType python nnoremap <leader>8 :call Pep8()<CR>
 
 " Automatically change code to pep8 (requires autopep8)
 function! AutoPep8()
@@ -351,5 +354,12 @@ function! AutoPep8()
     :%! python -m autopep8 --max-line-length 79 -aaa -
     :normal! vv`x
 :endfunction
-nnoremap <leader>9 :call AutoPep8()
+autocmd FileType python nnoremap <leader>9 :call AutoPep8()<CR>
 
+" Lint code (requires 3rd party linter)
+function! PyLint()
+    :normal! mxggVG
+    :w !python -m flake8 --show-source -
+    :normal! vv`x
+:endfunction
+autocmd FileType python nnoremap <leader>0 :call PyLint()<CR>

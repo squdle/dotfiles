@@ -1,11 +1,9 @@
-    # Place this in class __init__ (must be using modern classes)
+        # Place this in class __init__ (must be using modern classes)
         self._!!property_name!! = !!property_default_value!!
 
     @property
     def !!property_name!!(self):
-        """
-        Get or set !!property_name!! - !!property description!!.
-        """
+        """ Get or set !!property_name!! - !!property description!!."""
         return self._!!property_name!!
     
     @!!property_name!!.setter
