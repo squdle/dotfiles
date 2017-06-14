@@ -1,5 +1,5 @@
-" ~/.vimrc
 
+" ~/.vimrc
 " SETTINGS
 " ========
 
@@ -58,6 +58,9 @@ nnoremap ;7 :syntax off<CR>
 nnoremap ;8 :syntax on<CR>
 nnoremap ;0 :set relativenumber!<CR>
 nnoremap ;9 :set wrap!<CR>
+
+set encoding=utf-8  " The encoding displayed.
+set fileencoding=utf-8  " The encoding written to file.
 
 " STYLE
 " =====
@@ -159,6 +162,13 @@ autocmd FileType python nnoremap <leader>di :r ~/.vim/snippets/python/dict.py<CR
 autocmd FileType python nnoremap <leader>fo :r ~/.vim/snippets/python/for.py<CR>
 autocmd FileType python nnoremap <leader>wh :r ~/.vim/snippets/python/while.py<CR>
 autocmd FileType python nnoremap <leader>wi :r ~/.vim/snippets/python/with.py<CR>
+autocmd FileType python nnoremap <leader>cm :r ~/.vim/snippets/python/class_method.py<CR>
+autocmd FileType python nnoremap <leader>sm :r ~/.vim/snippets/python/static_method.py<CR>
+autocmd FileType python nnoremap <leader>test :r ~/.vim/snippets/python/test.py<CR>
+autocmd FileType python nnoremap <leader>tc :r ~/.vim/snippets/python/test_case.py<CR>
+autocmd FileType python nnoremap <leader>tm :r ~/.vim/snippets/python/test_method.py<CR>
+autocmd FileType python nnoremap <leader>try :r ~/.vim/snippets/python/try.py<CR>
+autocmd FileType python nnoremap <leader>env :r ~/.vim/snippets/python/env.py<CR>
 
 " Run / execute
 " -------------
@@ -326,3 +336,20 @@ nnoremap gp `[V`]
 " Enclose "quotes"
 nnoremap <leader>" lbi"<Esc>ea"<Esc> 
 nnoremap <leader>' lbi'<Esc>ea'<Esc> 
+
+" Check that code is pep8 compliant (requires pep8 module)"
+function! Pep8()
+    :normal! mxggVG
+    :w !python -c "import sys, pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or 'PEP8 pass')"
+    :normal! vv`x
+:endfunction
+nnoremap <leader>8 :call Pep8()<CR>
+
+" Automatically change code to pep8 (requires autopep8)
+function! AutoPep8()
+    :normal! mxggVG
+    :%! python -m autopep8 --max-line-length 79 -aaa -
+    :normal! vv`x
+:endfunction
+nnoremap <leader>9 :call AutoPep8()
+
