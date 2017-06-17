@@ -30,6 +30,12 @@ def get_args():
         help="!!int-arg help!!",
     )
     parser.add_argument(
+        "-!!flag-arg!!",
+        "--!!flag-arg-long!!",
+        action="store_true",
+        help="!!flag-arg help!!",
+    )
+    parser.add_argument(
         '-!!n-arg!!',
         '--!!multiple-arguments!!',
         nargs="*",

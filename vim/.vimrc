@@ -1,5 +1,5 @@
-
 " ~/.vimrc
+
 " SETTINGS
 " ========
 
@@ -40,8 +40,18 @@ vnoremap ; :
 " Work to 80 and/or 120 columns and don't wrap text by default,
 set colorcolumn=80,120
 set nowrap
+" Use 80 character width
+set textwidth=79
 " But don't force new lines if we go over.
-set textwidth=0 wrapmargin=0
+set wrapmargin=0
+
+" Spaces instead of tabs please.
+set tabstop=8
+set expandtab
+set softtabstop=4
+set shiftwidth=4
+filetype indent on
+set fileformat=unix
 
 " Fuzzy file searching
 set path+='**'
@@ -76,7 +86,6 @@ catch /^Vim\%((\a\+)\)\=:E185/
     pass
 endtry
 
-
 " Toggle between black and transparent background
 let $VIM_BG=1
 function! Transparent_toggle()
@@ -96,16 +105,22 @@ function! Blink_position()
     :set cursorline
     :highlight CursorLine ctermbg=White ctermfg=Black term=bold
     :redraw
-    :sleep 250m
+    :sleep 500m
     :highlight CursorLine ctermbg=NONE ctermfg=NONE term=NONE
     :set nocursorline
 :endfunction
-nnoremap ;<leader> :call Blink_position()<CR>
+nnoremap \\ :call Blink_position()<CR>
 
 " AUTOCOMPLETE
 " ============
 " Basic tab auto completion in insert mode, see |ins-completion|
 inoremap <tab> <C-n>
+
+" GENERAL HOTKEYS
+" ===============
+" enclose "quotes"
+nnoremap <leader>" lbi"<Esc>ea"<Esc> 
+nnoremap <leader>' lbi'<Esc>ea'<Esc> 
 
 " SNIPPETS
 " ========
@@ -154,8 +169,9 @@ autocmd FileType python nnoremap <leader>d :r ~/.vim/snippets/python/docstring.p
 autocmd FileType python nnoremap <leader>if  :r ~/.vim/snippets/python/if.py<CR>
 autocmd FileType python nnoremap <leader>ei :r ~/.vim/snippets/python/elif.py<CR>
 autocmd FileType python nnoremap <leader>el :r ~/.vim/snippets/python/else.py<CR>
-autocmd FileType python nnoremap <leader>arg :r ~/.vim/snippets/python/argparse.py<CR>
+autocmd FileType python nnoremap <leader>arg :r ~/.vim/snippets/python/args.py<CR>
 autocmd FileType python nnoremap <leader>imp :r ~/.vim/snippets/python/import.py<CR>
+autocmd FileType python nnoremap <leader>fro :r ~/.vim/snippets/python/import_from.py<CR>
 autocmd FileType python nnoremap <leader>lc :r ~/.vim/snippets/python/list_comprehension.py<CR>
 autocmd FileType python nnoremap <leader>ge :r ~/.vim/snippets/python/generator_expression.py<CR>
 autocmd FileType python nnoremap <leader>di :r ~/.vim/snippets/python/dict.py<CR>
@@ -170,20 +186,28 @@ autocmd FileType python nnoremap <leader>tm :r ~/.vim/snippets/python/test_metho
 autocmd FileType python nnoremap <leader>try :r ~/.vim/snippets/python/try.py<CR>
 autocmd FileType python nnoremap <leader>env :r ~/.vim/snippets/python/env.py<CR>
 
+" Debug
+" -----
+autocmd FileType python nnoremap <leader>db mxOimport pdb       # DEBUG<CR>pdb.set_trace()  # DEBUG<Esc>==`x
+autocmd FileType python nnoremap <leader>nodb mx:g/# DEBUG/d<CR>`x
+"autocmd FileType python 
+nnoremap <leader>4 mx:w! ~/tmp/pdb.py<CR>:!python -m pdb ~/tmp/pdb.py<CR>
+
 " Run / execute
 " -------------
 " Run python code on entire file.
-autocmd FileType python nnoremap <F5> ggVG!python<CR>
-autocmd FileType python nnoremap ;<CR> ggVG!python<CR>
+autocmd FileType python nnoremap <F5> g:%w !python<CR>
+autocmd FileType python nnoremap ;<CR> g:%w !python<CR>
+" Run python but ignore debug
+autocmd FileType python nnoremap <leader>5 :%w !grep -v 'DEBUG' <bar> python<CR>
 " Run python on selection
-" vnoremap <F5>  !python<CR>
 autocmd FileType python vnoremap <F5> :read '<.'>!python<CR>
 autocmd FileType python vnoremap <CR> :read '<.'>!python<CR>
 
 " NAVIGATION
 " ##########
 
-" Follow filepaths under cursor from any file (must save current buffer).
+" Follow filepaths under cursor can also use gf (must save current buffer).
 " Entire WORD:
 nnoremap ;] yaW:e <C-r>"<CR>
 " Visual selection:
@@ -251,26 +275,13 @@ nnoremap ;; :<C-u>let @x=system("echo " . v:count . " <bar> sed s/^0$/3/")<CR>:<
 " Skip lockscreen
 set shortmess+=I
 
+" Run specific behaviour on startup.
 function! Startup()
 :endfunction
-
 autocmd VimEnter  * :call Startup()
-
-" STATUSLINE
-" ==========
-function! Statusline()
-  return system('echo "$VIMSTATUS"')
-endfunction
-"set laststatus=1
-"set qstatusline=
-"set statusline=%!Statusline()
 
 " PYTHON
 " ======
-" Horizontal function definition parameters
-nnoremap <leader>( vi)2:s/[\n<bar> ]//g<CR>:.s/ //g<CR>V:s/,/, /g<CR>kgJ
-" Vertical function definition parameters
-nnoremap <leader>) "xdi)my^"zy0`yi<CR><Esc>"xgPi<CR>    <Esc>"zgPk:.s/ /\=@z/g<CR>I        <Esc>"zgP:.s/,/,\r        /g<CR>
 
 " Horizontal / vertical arguments
 " -------------------------------
@@ -287,30 +298,31 @@ nnoremap <leader>{ vi}2:s/[\n<bar> ]//g<CR>:.s/ //g<CR>V:s/,/, /g<CR>kgJ
 " Vertical arguments { }
 nnoremap <leader>} "xdi}my^"zy0`yi<CR><Esc>"xgPi<CR><Esc>"zgPk:.s/ /\=@z/g<CR>I    <Esc>"zgP:.s/,/,\r    /g<CR>
 
+" Horizontal function definition parameters
+nnoremap <leader>( vi):s/,\n/,/g<CR>:s/ //g<CR>V:s/,/, /g<CR>kgJ
+" Vertical function definition parameters
+nnoremap <leader>) "xdi)my^"zy0`yi<CR><Esc>"xgPi<CR>    <Esc>"zgPk:.s/ /\=@z/g<CR>I        <Esc>"zgP:.s/,/,\r        /g<CR>Jdt)
+" Fit function definition parameters within line limit.
+nnoremap <leader>() va(o<Esc>R(<CR><Esc>vi)gqvi):s/^$\n//g<CR>
+
 " Text objects
 " ------------
-" Horizontal function definition parameters
-nnoremap <leader>( vi)2:s/[\n<bar> ]//g<CR>:.s/ //g<CR>V:s/,/, /g<CR>kgJ
-" Vertical function definition parameters
-nnoremap <leader>) "xdi)my^"zy0`yi<CR><Esc>"xgPi<CR>    <Esc>"zgPk:.s/ /\=@z/g<CR>I        <Esc>"zgP:.s/,/,\r        /g<CR>
-
 " Function
-vnoremap af <Esc>$?def <CR>V/\v^$\n^$<bar>^$\n.*def<CR>k
-omap af :normal Vaf<CR>
-vnoremap if <Esc>$?def <CR>/):<CR>jV/\v^$\n^$<bar>^$\n.*def<CR>k
-omap if :normal Vif<CR>
+autocmd FileType python vnoremap af <Esc>$?^ *def <CR>V/\v\n^$\n^$<bar>\n^$\n.*def.*\(<bar>.*%$<CR>
+autocmd FileType python omap af :normal Vaf<CR>
+autocmd FileType python vnoremap if <Esc>$?^ *def <CR>/):<CR>j0v/\v\n^$\n^$<bar>\n^$\n.*def.*\(<bar>.*%$<CR>V
+autocmd FileType python omap if :normal Vif<CR>
 
 " Class
-vnoremap ac j:<C-U>silent! ?class <CR>V/^$\n^$<CR>k
-omap ac :normal Vac<CR>
-vnoremap ic j:<C-U>silent! ?class <CR>jV/^$\n^$<CR>k
-omap ic :normal Vic<CR>
-
+autocmd FileType python vnoremap ac j:<C-U>silent! ?class <CR>V/\n^$\n^$\<bar>\%$<CR>
+autocmd FileType python omap ac :normal Vac<CR>
+autocmd FileType python vnoremap ic j:<C-U>silent! ?class <CR>jV/\n^$\n^$\<bar>\%$<CR>
+autocmd FileType python omap ic :normal Vic<CR>
 
 " Folds
 " =====
 " Simple single level folding <C-f> to fold all, zE to unfold all.
-autocmd FileType python nnoremap <C-f> mx:g/def.*(/:normal jzfif<CR>:g/class /:normal jzfic<CR>`x
+autocmd FileType python nnoremap <C-f> mxzE:g/^ *def.*(/:normal jzfif<CR>:g/^ *class /:normal jzfic<CR>`x
 
 " SH / SHELL
 " ==========
@@ -340,26 +352,63 @@ nnoremap <leader>' lbi'<Esc>ea'<Esc>
 " Pep8 and Linting
 " ----------------
 
-" Check that code is pep8 compliant (requires pep8 module)"
-function! Pep8()
-    :normal! mxggVG
-    :w !python -c "import sys, pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or 'PEP8 pass')"
-    :normal! vv`x
+function! CopyAllToTempBuffer()
+    :normal! mxggyG`x
+    :vs | ene
+    :call Temp_buffer()
+    :normal! pggddVG
 :endfunction
-autocmd FileType python nnoremap <leader>8 :call Pep8()<CR>
+
+" Check if a test has passed by looking for an empty buffer.
+function! CheckTestPass(message, stay)
+    :let line=getline(".")
+    :if line == ""
+        :close
+        :redraw
+        :echo a:message
+    else
+        :redraw
+        :normal <Esc>
+        :if a:stay != 1
+            :wincmd p
+        :endif
+    :endif
+:endfunction
+
+
+function! Remap_tmp_CR_debug_jump()
+" Temporarily remap carriage return to open a selected filename.
+    :nnoremap <buffer> <CR> $/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>
+:endfunction
+function! Remap_tmp_CR_debug_jump_close()
+" Temporarily remap carriage return to open a selected filename.
+    :nnoremap <buffer> <CR> $/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>:wincmd p<bar>bd<CR>
+:endfunction
+
+" Lint code (uncomment desired linter, note pep8 was renamed to pycodestyle)
+function! PyLint()
+    :call CopyAllToTempBuffer()
+    ":%!python -c "import sys, pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
+    ":%!python -c "import sys, import pycodestyle as pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
+    :%!python -c "import flake8.main.cli; flake8.main.cli.main()" -
+    "--show-source -
+    :call Remap_tmp_CR_debug_jump_close()
+    :call CheckTestPass("Linter pass", 1)
+:endfunction
+autocmd FileType python nnoremap <leader>1 :call PyLint()<CR>
+
+" Lint code (uncomment desired linter, note pep8 was renamed to pycodestyle)
+function! PyDocStyle()
+    :call CopyAllToTempBuffer()
+    :%!python -c "import pydocstyle.cli; pydocstyle.cli.main()" -
+    :call CheckTestPass("Docstyle pass", 0)
+:endfunction
+autocmd FileType python nnoremap <leader>2 :call PyDocStyle()<CR>
 
 " Automatically change code to pep8 (requires autopep8)
 function! AutoPep8()
     :normal! mxggVG
-    :%! python -m autopep8 --max-line-length 79 -aaa -
+    :%! python -m autopep8 --max-line-length 79 -a -a -a -a --pep8-passes 2000 -
     :normal! vv`x
 :endfunction
-autocmd FileType python nnoremap <leader>9 :call AutoPep8()<CR>
-
-" Lint code (requires 3rd party linter)
-function! PyLint()
-    :normal! mxggVG
-    :w !python -m flake8 --show-source -
-    :normal! vv`x
-:endfunction
-autocmd FileType python nnoremap <leader>0 :call PyLint()<CR>
+autocmd FileType python nnoremap <leader>3 :call AutoPep8()<CR>
