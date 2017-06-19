@@ -3,6 +3,7 @@
 " SETTINGS
 " ========
 
+
 " Turn of vi compatible
 set nocompatible
 
@@ -53,13 +54,18 @@ set shiftwidth=4
 filetype indent on
 set fileformat=unix
 
+" Stop neovim messing with my macros.
+set formatoptions=tcq
+
 " Fuzzy file searching
 set path+='**'
 set wildmenu
 set wildmode=longest:full,full
 
-" Reload .vimrc on save
+" reload .vimrc on save
 autocmd! bufwritepost .vimrc source %
+" Edit vimrc quickly
+nnoremap ;rc :vs ~/.vimrc<CR>
 
 " Toggle settings.
 nnoremap ;- :set colorcolumn=<CR>
@@ -188,10 +194,36 @@ autocmd FileType python nnoremap <leader>env :r ~/.vim/snippets/python/env.py<CR
 
 " Debug
 " -----
-autocmd FileType python nnoremap <leader>db mxOimport pdb       # DEBUG<CR>pdb.set_trace()  # DEBUG<Esc>==`x
-autocmd FileType python nnoremap <leader>nodb mx:g/# DEBUG/d<CR>`x
-"autocmd FileType python 
-nnoremap <leader>4 mx:w! ~/tmp/pdb.py<CR>:!python -m pdb ~/tmp/pdb.py<CR>
+"Create temp file from buffer, run with pdb and then remove tempfile.
+function! PyDebug()
+    let filepath = expand("%:p:h") . "/pdb_vim.py"
+    exe "w! " . filepath
+    let command = "python -m pdb " . filepath . " || rm " . filepath
+    if has('nvim')
+        vs | ene | call Temp_buffer()
+        exe "terminal " . command
+    else
+        exe "! " . command
+    endif
+:endfunction
+
+" Add a python pdb breakpoint (two lnes to not conflict with pep8)
+" These can be removed with PyNoBreakPoint() or by filtering for '# DEBUG'
+function! PyBreakPoint()
+    :normal! mx
+    :normal! Opdb.set_trace()  # DEBUG
+    :normal! Oimport pdb       # DEBUG
+    :normal! Vk=`x
+:endfunction
+
+" Remove pdb debug set_trace calls and pdb imports.
+function! PyNoDEBUG()
+    :g/#.*DEBUG/d
+:endfunction
+
+autocmd FileType python nnoremap <leader>db :call PyBreakPoint()<CR>
+autocmd FileType python nnoremap <leader>nodb :call PyNoDebug()<CR>
+autocmd FileType python nnoremap <leader>4 :call PyDebug()<CR>
 
 " Run / execute
 " -------------
@@ -277,6 +309,8 @@ set shortmess+=I
 
 " Run specific behaviour on startup.
 function! Startup()
+    :w ! echo "" && cat ~/.config/splash && echo ""
+    :sleep 1000m
 :endfunction
 autocmd VimEnter  * :call Startup()
 
@@ -288,7 +322,7 @@ autocmd VimEnter  * :call Startup()
 " Horizontal arguments ( )
 nnoremap <leader>9 vi)2:s/[\n<bar> ]//g<CR>:.s/ //g<CR>V:s/,/, /g<CR>kgJ
 " Vertical arguments ( )
-nnoremap <leader>0 "xdi)my^"zy0`yi<CR><Esc>"xgPi<CR><Esc>"zgPk:.s/ /\=@z/g<CR>I    <Esc>"zgP:.s/,/,\r    /g<CR>
+nnoremap <leader>0 mx^"yy0`xva)o<Esc>a<CR><Esc>^d0:s/, /,\r/g<CR>va)<Esc>i<CR><Esc>vi)<C-v>I<C-r>y    <Esc>va)<Esc>"yP
 " Horizontal arguments [ ]
 nnoremap <leader>[ vi]2:s/[\n<bar> ]//g<CR>:.s/ //g<CR>V:s/,/, /g<CR>kgJ
 " Vertical arguments [ ]
@@ -301,7 +335,7 @@ nnoremap <leader>} "xdi}my^"zy0`yi<CR><Esc>"xgPi<CR><Esc>"zgPk:.s/ /\=@z/g<CR>I 
 " Horizontal function definition parameters
 nnoremap <leader>( vi):s/,\n/,/g<CR>:s/ //g<CR>V:s/,/, /g<CR>kgJ
 " Vertical function definition parameters
-nnoremap <leader>) "xdi)my^"zy0`yi<CR><Esc>"xgPi<CR>    <Esc>"zgPk:.s/ /\=@z/g<CR>I        <Esc>"zgP:.s/,/,\r        /g<CR>Jdt)
+nnoremap <leader>) "xdi)my^"zy0`yi<CR><Esc>"xgPi<CR>    <Esc>"zgPk:.s/ /\=@z/g<CR>I        <Esc>"zgP:.s/,/,\r        /g<CR>Jdt)vi)=
 " Fit function definition parameters within line limit.
 nnoremap <leader>() va(o<Esc>R(<CR><Esc>vi)gqvi):s/^$\n//g<CR>
 
@@ -356,7 +390,7 @@ function! CopyAllToTempBuffer()
     :normal! mxggyG`x
     :vs | ene
     :call Temp_buffer()
-    :normal! pggddVG
+    :normal! pggdd
 :endfunction
 
 " Check if a test has passed by looking for an empty buffer.
@@ -368,7 +402,7 @@ function! CheckTestPass(message, stay)
         :echo a:message
     else
         :redraw
-        :normal <Esc>
+        :normal! vv
         :if a:stay != 1
             :wincmd p
         :endif
@@ -378,20 +412,20 @@ function! CheckTestPass(message, stay)
 
 function! Remap_tmp_CR_debug_jump()
 " Temporarily remap carriage return to open a selected filename.
-    :nnoremap <buffer> <CR> $/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>
+    :nnoremap <buffer> <CR> $?stdin:P/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>
 :endfunction
 function! Remap_tmp_CR_debug_jump_close()
 " Temporarily remap carriage return to open a selected filename.
-    :nnoremap <buffer> <CR> $/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>:wincmd p<bar>bd<CR>
+    :nnoremap <buffer> <CR> $?stdin:<CR>/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>:wincmd p<bar>bd<CR>
 :endfunction
 
 " Lint code (uncomment desired linter, note pep8 was renamed to pycodestyle)
 function! PyLint()
     :call CopyAllToTempBuffer()
+    normal! VG
     ":%!python -c "import sys, pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
     ":%!python -c "import sys, import pycodestyle as pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
     :%!python -c "import flake8.main.cli; flake8.main.cli.main()" -
-    "--show-source -
     :call Remap_tmp_CR_debug_jump_close()
     :call CheckTestPass("Linter pass", 1)
 :endfunction
@@ -399,11 +433,17 @@ autocmd FileType python nnoremap <leader>1 :call PyLint()<CR>
 
 " Lint code (uncomment desired linter, note pep8 was renamed to pycodestyle)
 function! PyDocStyle()
-    :call CopyAllToTempBuffer()
-    :%!python -c "import pydocstyle.cli; pydocstyle.cli.main()" -
-    :call CheckTestPass("Docstyle pass", 0)
+    let filepath = expand("%:p:h") . "/doc_vim.py"
+    exe "w! " . filepath
+    let command = "python -m pydocstyle " . filepath . "|| rm " . filepath
+    vs | ene | call Temp_buffer()
+    exe "r ! " . command
+    %s/^.*\.py:/stdin:/ge
+    call Remap_tmp_CR_debug_jump_close()
+    call CheckTestPass("Docstyle pass", 1)
 :endfunction
 autocmd FileType python nnoremap <leader>2 :call PyDocStyle()<CR>
+nnoremap <leader>2 :call PyDocStyle()<CR>
 
 " Automatically change code to pep8 (requires autopep8)
 function! AutoPep8()
@@ -412,3 +452,71 @@ function! AutoPep8()
     :normal! vv`x
 :endfunction
 autocmd FileType python nnoremap <leader>3 :call AutoPep8()<CR>
+
+" Profiling
+" -------
+function! PyProfile()
+    call CopyAllToTempBuffer()
+    :%! python -c 'import sys,cProfile;cProfile.run(sys.stdin.read())'
+:endfunction
+nnoremap <leader>7 :call PyProfile()<CR>
+
+" GIT
+" ---
+"View git log
+
+" Call git log on project of current buffer.
+" Runs app if command provided.
+" Pass empty string to get normal git log
+function! GitLog(app)
+    let bufferpath = expand("%:p:h")
+    let command = 'cd ' . bufferpath . ';git log --graph --abbrev --decorate --oneline --graph'
+    echo command
+    if a:app == ""
+        if has('nvim')
+            sp | ene | call Temp_buffer()
+            exe "terminal " . command
+        else
+            exe '! ' . command
+        endif
+    else
+        let message = '\nlaunching external git log viewer...\n'
+        let command = 'cd ' . bufferpath . ' && ' . a:app
+        exe '! echo -e "' . message . '"'
+        exe '! ' . command
+    endif
+endfunction
+
+" Call git status on project of current buffer.
+function! GitStatus()
+    let bufferpath = expand("%:p:h")
+    exe '! cd ' . bufferpath . ' && git status'
+endfunction
+
+" Use normal python log
+nnoremap <leader>6 :call GitStatus() <bar> call GitLog("")<CR>
+" Launch GUI git log
+nnoremap <F6> :call GitLog("gitg")<CR>
+
+" NVIM SPECIFIC
+" -------------
+
+" In nvim, open keyword/help in new terminal,
+" as nvim doesn't currently allow terminal scrollback.
+function! KeywordNvim()
+    if &keywordprg == ':Man'
+        let l:man = 'man'
+    else
+        let l:man = &keywordprg
+    endif
+    let l:wordUnderCursor = expand("<cword>")
+    vsplit | enew
+    exe 'terminal ' . l:man l:wordUnderCursor
+endfunction
+
+if has("nvim")
+    nnoremap K :call KeywordNvim()<CR>
+    vnoremap K <Esc>:call KeywordNvim()<CR>
+endif
+
+
