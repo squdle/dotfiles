@@ -18,7 +18,7 @@
 highlight Normal          ctermbg=0 ctermfg=231
 highlight ColorColumn     ctermbg=233
 highlight LineNr          term=bold ctermbg=233 ctermfg=240
-highlight CursorLineNr    ctermfg=White gui=bold guifg=White term=bold
+highlight CursorLineNr    ctermfg=Black ctermbg=240 gui=bold guifg=White term=bold
 highlight Visual          ctermfg=231 ctermbg=240
 highlight Wildmenu        ctermfg=0 ctermbg=231
 highlight Folded          ctermfg=231 ctermbg=240

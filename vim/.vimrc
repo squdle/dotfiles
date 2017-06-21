@@ -2,19 +2,20 @@
 
 " SETTINGS
 " ========
-
-
 " Turn of vi compatible
 set nocompatible
 
-" syntax and plugins.
-syntax off
+" plugins.
 filetype plugin on
+
+" syntax default off
+syntax off
 
 " Use space as leader key.
 let mapleader=" "
 
-" Use relative numbers.
+" Use relative numbers  and number for current line.
+" (modern vim versions allow both simultaneous).
 set relativenumber
 set number
 
@@ -25,11 +26,11 @@ set incsearch
 " Avoid having to reach for esc key.
 inoremap jj <Esc>
 
-" Use swapfiles but store them out of the way
+" Use swapfiles but store them out of the way of harm / annoyance.
 set swapfile
 set dir=~/tmp
 
-" Allow filetypes for specific snippets, text objects, etc
+" Allow filetypes for specific snippets, text objects, etc.
 filetype on
 
 " Swap ; and : for faster ex mode.
@@ -52,13 +53,12 @@ set expandtab
 set softtabstop=4
 set shiftwidth=4
 filetype indent on
-set fileformat=unix
 
-" Stop neovim messing with my macros.
+" Stop neovim messing with macros (used different default values to vim).
 set formatoptions=tcq
 
 " Fuzzy file searching
-set path+='**'
+set path=$PWD/**
 set wildmenu
 set wildmode=longest:full,full
 
@@ -70,82 +70,127 @@ nnoremap ;rc :vs ~/.vimrc<CR>
 " Toggle settings.
 nnoremap ;- :set colorcolumn=<CR>
 nnoremap ;= :set colorcolumn=80,120<CR>
-nnoremap ;7 :syntax off<CR>
-nnoremap ;8 :syntax on<CR>
 nnoremap ;0 :set relativenumber!<CR>
-nnoremap ;9 :set wrap!<CR>
+nnoremap ;9 :set number!<CR>
+nnoremap ;8 :set wrap!<CR>
+nnoremap ;7 :syntax on<CR>
+nnoremap ;6 :syntax off<CR>
 
 set encoding=utf-8  " The encoding displayed.
 set fileencoding=utf-8  " The encoding written to file.
+set fileformat=unix " unix line endings
 
 " STYLE
 " =====
+" guiterminal and cterminal color schemes.
+" Loads guicolorscheme by default and falls back to ctermfg.
+let g:guicolorscheme = "base16-eighties"
+let g:ctermcolorscheme = "default"
 
-" Try and load our color scheme
-try
-    " Allow the pretty colours (disable if not using terminal emulator)
-    set t_Co=257
-    colorscheme squdle
-    " Inform vim that we're probably using a dark theme.
+" Load gui colour scheme set by g:guicolorscheme
+function! TermGuiColors()
+    set termguicolors
+    exe "colorscheme" g:guicolorscheme
+    syntax on
+endfunction
+
+" Load cterm colour scheme set by g:cterm color scheme.
+function! CTermColors()
+    "Inform vim that we're probably using a dark theme.
     set background=dark 
-catch /^Vim\%((\a\+)\)\=:E185/
-    pass
-endtry
+    " Turn of gui colors
+    set notermguicolors
+    syntax off
+    "Try to load color scheme
+    try
+        set t_Co=256
+        exe "colorscheme" g:ctermcolorscheme
+    catch /^Vim\%((\a\+)\)\=:E185/
+         echom "Couldn't find colorscheme"
+        pass
+    endtry
+endfunction
+
+if has("termguicolors")
+    call TermGuiColors()
+else
+    call CTermColors()
+endif
 
 " Toggle between black and transparent background
 let $VIM_BG=1
 function! Transparent_toggle()
-    : echo $VIM_BG
-    :if $VIM_BG
-    :    highlight Normal ctermbg=none
-    :    let $VIM_BG=0
-    :else
-    :    highlight Normal ctermbg=Black
-    :    let $VIM_BG=1
-    :endif
-:endfunction
-nnoremap \ :call Transparent_toggle()<CR>
+     echo $VIM_BG
+    if $VIM_BG
+        "highlight Normal ctermbg=none
+        highlight Normal ctermbg=none guibg=NONE
+        highlight NonText ctermbg=none guibg=NONE
+        let $VIM_BG=0
+    else
+        highlight Normal ctermbg=Black guibg=#000000
+        let $VIM_BG=1
+    endif
+endfunction
 
-" Blink cursor
-function! Blink_position()
-    :set cursorline
-    :highlight CursorLine ctermbg=White ctermfg=Black term=bold
-    :redraw
-    :sleep 500m
-    :highlight CursorLine ctermbg=NONE ctermfg=NONE term=NONE
-    :set nocursorline
-:endfunction
-nnoremap \\ :call Blink_position()<CR>
+" Switch color schemes on the fly.
+nnoremap 1\ :call TermGuiColors()<CR>
+nnoremap 2\ :call CTermColors()<CR>
+nnoremap 3\ :call Transparent_toggle()<CR>
+
+" Blink cursor - useful for when you loose your cursor or demonstrations.
+function! BlinkPosition()
+    set cursorline
+    highlight CursorLine ctermbg=White ctermfg=Black guibg=#000000 term=bold
+    redraw
+    sleep 500m
+    highlight CursorLine ctermbg=NONE ctermfg=NONE term=NONE
+    set nocursorline
+endfunction
+nnoremap \ :call BlinkPosition()<CR>
 
 " AUTOCOMPLETE
 " ============
-" Basic tab auto completion in insert mode, see |ins-completion|
+" Basic tab auto completion in insert mode, see |ins-completion| for more.
+
+" Tab completion (may need to generate tags).
 inoremap <tab> <C-n>
 
-" GENERAL HOTKEYS
+" Regenerate ctags for current working directory
+" vim may complain if tags doesn't exist for the above tab completion command.
+nnoremap ;t :!ctags -R<CR>
+
+" GENERAL HOTKEYS (any filetype / programming language)
 " ===============
 " enclose "quotes"
 nnoremap <leader>" lbi"<Esc>ea"<Esc> 
 nnoremap <leader>' lbi'<Esc>ea'<Esc> 
 
+" UTILITY FUNCTIONS
+" =================
+
+" Remove all blank lines in the file
+function! RemoveBlankLines()
+   g/^$/d
+   normal! gg
+endfunction
+
+" Make buffer temporary (No warning when closing with unsaved changes).
+function! TempBuffer()
+    setlocal buftype=nofile noswapfile bufhidden=delete
+endfunction
+
 " SNIPPETS
 " ========
 
-" General search and replace for snippets.
+" Search and replace for snippets.
 " Looks for and replaces all instances of double 'bang' enclosed keyword:
 " !!keyword!!
 function! BangReplace()
-    :let @y=inputdialog("Replace " . @x . ": ")
-    :exe '%s/' . @x . '/\=@y/g'
-    :normal '`z'
-:endfunction
+    let @y=inputdialog("Replace " . @x . ": ")
+    exe '%s/' . @x . '/\=@y/g'
+    normal! '`z'
+endfunction
 nnoremap <leader><leader> /!!.*!!<CR>mzv3f!"xy:call BangReplace()<CR>
-function! BangReplaceLine()
-    :let @y=inputdialog("Replace " . @x . ": ")
-    :exe '.s/' . @x . '/\=@y/g'
-    :normal '`z'
-:endfunction
-nnoremap <leader>. /!!.*!!<CR>mzv3f!"xy:call BangReplaceLine()<CR>
 
 " Language specific snippets are in own sections and determined by filetype,
 " but all basic templates are global.
@@ -154,10 +199,10 @@ nnoremap <leader>sh :r ~/.vim/snippets/sh/template<CR>kdd
 " (py)thon
 nnoremap <leader>py :r ~/.vim/snippets/python/template.py<CR>kdd
 
-" RUN / EXECUTE
+" RUN / EXECUTE (in shell)
 " =============
-vnoremap <CR> y:r ! <C-r>"
-nnoremap ;<CR> ggVG: ! sh <CR>ggVG"xyu:bel split <bar> ene <CR>"xp:call Temp_buffer()<CR>:file result<CR>
+vnoremap <CR> y:r ! <C-r>"<CR>
+nnoremap ;<CR> mxggVG: ! sh <CR>ggVG"yyu:bel split <bar> ene <CR>"yp:call TempBuffer()<CR>:file result<CR><C-w><C-p>`x
 
 " PYTHON
 " ======
@@ -200,26 +245,26 @@ function! PyDebug()
     exe "w! " . filepath
     let command = "python -m pdb " . filepath . " || rm " . filepath
     if has('nvim')
-        vs | ene | call Temp_buffer()
+        vs | ene | call TempBuffer()
         exe "terminal " . command
     else
         exe "! " . command
     endif
-:endfunction
+endfunction
 
 " Add a python pdb breakpoint (two lnes to not conflict with pep8)
 " These can be removed with PyNoBreakPoint() or by filtering for '# DEBUG'
 function! PyBreakPoint()
-    :normal! mx
-    :normal! Opdb.set_trace()  # DEBUG
-    :normal! Oimport pdb       # DEBUG
-    :normal! Vk=`x
-:endfunction
+    normal! mx
+    normal! Opdb.set_trace()  # DEBUG
+    normal! Oimport pdb       # DEBUG
+    normal! Vk=`x
+endfunction
 
 " Remove pdb debug set_trace calls and pdb imports.
 function! PyNoDEBUG()
-    :g/#.*DEBUG/d
-:endfunction
+    g/#.*DEBUG/d
+endfunction
 
 autocmd FileType python nnoremap <leader>db :call PyBreakPoint()<CR>
 autocmd FileType python nnoremap <leader>nodb :call PyNoDebug()<CR>
@@ -237,69 +282,55 @@ autocmd FileType python vnoremap <F5> :read '<.'>!python<CR>
 autocmd FileType python vnoremap <CR> :read '<.'>!python<CR>
 
 " NAVIGATION
-" ##########
-
-" Follow filepaths under cursor can also use gf (must save current buffer).
-" Entire WORD:
-nnoremap ;] yaW:e <C-r>"<CR>
-" Visual selection:
-vnoremap ;] y:e <C-r>"<CR>
+" ==========
 
 " Make netrw less ugly for when we do need it.
 let g:netrw_banner=0
 
-" CTAGS
-" -----
-" Regenerate ctags for current working directory
-nnoremap ;t :!ctags -R<CR>
-
-" Plain text file browser
-" =======================
-" Simple plain text file tree.
+" Plain text tree file browser
+" ----------------------------
+" Make a buffer from the tree command for quick simple file browsing.
 "
-" ;;        - browse from cwd
-" ;.        - browse from current file directory
-" <count>;, - browse from cwd as tree (default depth 3)
-" <CR>      - follow links
+" Create buffer :
+" ;;        - Browse from project directory (cwd).
+" ;.        - Browse from current file directory.
 "
-" If a folder is found this will fallback to netrw/default file browswr
+" Navigate buffer :
+" <CR>      - Follow links. Falls back to netrw if folder selected.
+" 0 - 9     - Recreate buffer with different tree level, 0 = all.
 
-function! Remove_trailing_blanks()
-   :g/^$/d
-   :normal gg
-:endfunction
+function! BrowseProjectTree(depth)
+    enew 
+    set nowrap
+    if a:depth == 0
+        let l:tree = 'tree --noreport -a'
+        let l:files = 'tree -fi --noreport -a'
+        let command = 'read ! ' . l:tree . ';' . l:files
+        exe command
+    else
+        let l:tree = 'tree --noreport -a -L ' . a:depth 
+        let l:files = 'tree -fi --noreport -a -L ' .  a:depth
+        let command = 'read ! ' . l:tree . ';' . l:files
+        exe command
+    endif
+    let g:offset =  line(".") / 2 
+    normal! ggddG
+    exe 'normal! ' . g:offset . 'G'
+    normal! mx
+    normal! gg
+    " Temporarily remap carriage return to open a selected absolute filename.
+    nnoremap <buffer> <CR> :exe 'normal! ' . (g:offset + line(".")) . 'Ggf'<CR>
+    nnoremap <buffer> n :exe 'normal! ' . (g:offset + line(".")) . 'G'<CR>
+    nnoremap <buffer> N :exe 'normal! ' . (line(".") - g:offset) . 'G'<CR>
+    for i in [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        exe 'nnoremap <buffer>' i ':call BrowseProjectTree('i')<CR>'
+    endfor
+    nnoremap <buffer> 0 :call BrowseProjectTree(0)<CR>
+    call TempBuffer()
+endfunction
+nnoremap ;; :call BrowseProjectTree(1)<CR>
+nnoremap ;<leader> :vsplit <bar> call BrowseProjectTree(3)<CR>
 
-function! Temp_buffer()
-    :setlocal buftype=nofile noswapfile bufhidden=delete
-:endfunction
-
-function! Remap_tmp_CR_view_rel()
-" Temporarily remap carriage return to open a selected filename.
-    :let @x=expand("%:p:h")
-    :nnoremap <buffer> <CR> 0df/yaW:e! <C-r>x/<C-r>"<CR>
-:endfunction
-
-" Pop up a vertical split buffer, list files in current directory, temporarily remap <CR> to open.
-"nnoremap ;; :vs <bar> enew <bar> set nowrap <bar> r!find . -maxdepth 1<CR>ggdd<CR>: call Temp_buffer()<CR>:call Remap_tmp_CR_view_rel()<CR>+
-
-function! Remap_tmp_CR_view_abs()
-" Temporarily remap carriage return to open a selected absolute filename.
-    :nnoremap <buffer> <CR> 0f<bar>ly$:e! <C-r>"<CR>
-:endfunction
-
-" Pop up a vertical split buffer, list files in current directory, temporarily remap <CR> to open.
-nnoremap ;. :let @x=expand("%:p:h")<CR>:vs <bar> enew <bar> set nowrap <CR>:  r!find <C-r>x -maxdepth 1<CR>ggdd<C-v>G$"yy<C-v>G0I<bar><Esc><C-v>G0200I <Esc><C-v>G0"yP:%s!<C-r>x!.!<CR>:call Remap_tmp_CR_view_abs()<CR>: call Temp_buffer()<CR>gg+
-
-function! Remap_tmp_CR_view_tree()
-" Temporarily remap carriage return to open a selected absolute filename.
-    :nnoremap <buffer> <CR> 0f<bar>ly$:e! <C-r>"<CR>
-:endfunction
-
-" Pop up a vertical split buffer, list files in current directory, temporarily remap <CR> to open.
-nnoremap ;v :<C-u>let @x=system("echo " . v:count . " <bar> sed s/^0$/3/")<CR>:<C-U>vs <bar> enew <bar> set nowrap <bar> r!tree -a --noreport -L <C-r>x <CR>mb:r ! tree -a -fi --noreport -L <C-r>x <CR>'b+<C-v>G$I<bar><Esc><C-v>G$dggj2000A <Esc>$Pggdd:call Remap_tmp_CR_view_tree()<CR>: call Temp_buffer()<CR>: call Remove_trailing_blanks()<CR>+
-
-" Pop up a vertical split buffer, list files in current directory, temporarily remap <CR> to open.
-nnoremap ;; :<C-u>let @x=system("echo " . v:count . " <bar> sed s/^0$/3/")<CR>:<C-U> enew <bar> set nowrap <bar> r!tree -a --noreport -L <C-r>x <CR>mb:r ! tree -a -fi --noreport -L <C-r>x <CR>'b+<C-v>G$I<bar><Esc><C-v>G$dggj2000A <Esc>$Pggdd:call Remap_tmp_CR_view_tree()<CR>: call Temp_buffer()<CR>: call Remove_trailing_blanks()<CR>+
 
 " STARTUP
 " =======
@@ -309,9 +340,9 @@ set shortmess+=I
 
 " Run specific behaviour on startup.
 function! Startup()
-    :w ! echo "" && cat ~/.config/splash && echo ""
-    :sleep 1000m
-:endfunction
+    w ! echo "" && cat ~/.config/splash && echo ""
+    sleep 1000m
+endfunction
 autocmd VimEnter  * :call Startup()
 
 " PYTHON
@@ -343,20 +374,20 @@ nnoremap <leader>() va(o<Esc>R(<CR><Esc>vi)gqvi):s/^$\n//g<CR>
 " ------------
 " Function
 autocmd FileType python vnoremap af <Esc>$?^ *def <CR>V/\v\n^$\n^$<bar>\n^$\n.*def.*\(<bar>.*%$<CR>
-autocmd FileType python omap af :normal Vaf<CR>
+autocmd FileType python omap af :normal! Vaf<CR>
 autocmd FileType python vnoremap if <Esc>$?^ *def <CR>/):<CR>j0v/\v\n^$\n^$<bar>\n^$\n.*def.*\(<bar>.*%$<CR>V
-autocmd FileType python omap if :normal Vif<CR>
+autocmd FileType python omap if :normal! Vif<CR>
 
 " Class
 autocmd FileType python vnoremap ac j:<C-U>silent! ?class <CR>V/\n^$\n^$\<bar>\%$<CR>
-autocmd FileType python omap ac :normal Vac<CR>
+autocmd FileType python omap ac :normal! Vac<CR>
 autocmd FileType python vnoremap ic j:<C-U>silent! ?class <CR>jV/\n^$\n^$\<bar>\%$<CR>
-autocmd FileType python omap ic :normal Vic<CR>
+autocmd FileType python omap ic :normal! Vic<CR>
 
 " Folds
 " =====
 " Simple single level folding <C-f> to fold all, zE to unfold all.
-autocmd FileType python nnoremap <C-f> mxzE:g/^ *def.*(/:normal jzfif<CR>:g/^ *class /:normal jzfic<CR>`x
+autocmd FileType python nnoremap <C-f> mxzE:g/^ *def.*(/:normal! jzfif<CR>:g/^ *class /:normal! jzfic<CR>`x
 
 " SH / SHELL
 " ==========
@@ -387,78 +418,82 @@ nnoremap <leader>' lbi'<Esc>ea'<Esc>
 " ----------------
 
 function! CopyAllToTempBuffer()
-    :normal! mxggyG`x
-    :vs | ene
-    :call Temp_buffer()
-    :normal! pggdd
-:endfunction
+    normal! mxggyG`x
+    vs | ene
+    call TempBuffer()
+    normal! pggdd
+endfunction
 
 " Check if a test has passed by looking for an empty buffer.
 function! CheckTestPass(message, stay)
-    :let line=getline(".")
-    :if line == ""
-        :close
-        :redraw
-        :echo a:message
+    let line=getline(".")
+    if line == ""
+        close
+        redraw
+        echo a:message
     else
-        :redraw
-        :normal! vv
-        :if a:stay != 1
-            :wincmd p
-        :endif
-    :endif
-:endfunction
+        redraw
+        normal! vv
+        if a:stay != 1
+            wincmd p
+        endif
+    endif
+endfunction
 
 
 function! Remap_tmp_CR_debug_jump()
 " Temporarily remap carriage return to open a selected filename.
-    :nnoremap <buffer> <CR> $?stdin:P/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>
-:endfunction
+    nnoremap <buffer> <CR> $?stdin:P/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>
+endfunction
 function! Remap_tmp_CR_debug_jump_close()
 " Temporarily remap carriage return to open a selected filename.
-    :nnoremap <buffer> <CR> $?stdin:<CR>/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>:wincmd p<bar>bd<CR>
-:endfunction
+    nnoremap <buffer> <CR> $?stdin:<CR>/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>:wincmd p<bar>bd<CR>
+endfunction
 
-" Lint code (uncomment desired linter, note pep8 was renamed to pycodestyle)
+" Lint code tries to use flake8, then pycodestyle / pep8
+
 function! PyLint()
-    :call CopyAllToTempBuffer()
+    call CopyAllToTempBuffer()
     normal! VG
-    ":%!python -c "import sys, pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
-    ":%!python -c "import sys, import pycodestyle as pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
-    :%!python -c "import flake8.main.cli; flake8.main.cli.main()" -
-    :call Remap_tmp_CR_debug_jump_close()
-    :call CheckTestPass("Linter pass", 1)
-:endfunction
+    let pep8 = "import sys, pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
+    let pycodestyle = "import sys, import pycodestyle as pep8; print(pep8.Checker(lines=sys.stdin.readlines(), show_source=True, verbose=True).check_all() or '')"
+    let flake8 = "import flake8.main.cli; flake8.main.cli.main()"
+    "echom '"' . flake8 . '" || python -c "' . pycodestyle . '" || python -c "' . pep8 '"  ; rm ' . filepath 
+    exe '%! python -c "' . flake8 . '" || python -c "' . pycodestyle . '" || python -c "' . pep8 '"  ; rm ' . filepath 
+    call Remap_tmp_CR_debug_jump_close()
+    call CheckTestPass("Linter pass", 1)
+endfunction
 autocmd FileType python nnoremap <leader>1 :call PyLint()<CR>
 
-" Lint code (uncomment desired linter, note pep8 was renamed to pycodestyle)
+" Check docstring style. Looks for pydocstyle then pep257 
 function! PyDocStyle()
     let filepath = expand("%:p:h") . "/doc_vim.py"
     exe "w! " . filepath
-    let command = "python -m pydocstyle " . filepath . "|| rm " . filepath
-    vs | ene | call Temp_buffer()
+    vs | ene | call TempBuffer()
+    let command = "python -m pydocstyle " . filepath . " || python -m pep257 " . filepath . " ; rm " . filepath
+    let command = "python -m pydocstyle " . filepath . " || python -m pep257 " . filepath . " ; rm " . filepath
     exe "r ! " . command
     %s/^.*\.py:/stdin:/ge
     call Remap_tmp_CR_debug_jump_close()
     call CheckTestPass("Docstyle pass", 1)
-:endfunction
+endfunction
 autocmd FileType python nnoremap <leader>2 :call PyDocStyle()<CR>
 nnoremap <leader>2 :call PyDocStyle()<CR>
 
 " Automatically change code to pep8 (requires autopep8)
 function! AutoPep8()
-    :normal! mxggVG
-    :%! python -m autopep8 --max-line-length 79 -a -a -a -a --pep8-passes 2000 -
-    :normal! vv`x
-:endfunction
+    normal! mxggVG
+    %! python -m autopep8 --max-line-length 79 -a -a -a -a --pep8-passes 2000 -
+    normal! vv`x
+endfunction
 autocmd FileType python nnoremap <leader>3 :call AutoPep8()<CR>
 
 " Profiling
 " -------
 function! PyProfile()
     call CopyAllToTempBuffer()
-    :%! python -c 'import sys,cProfile;cProfile.run(sys.stdin.read())'
-:endfunction
+    %! python -c 'import sys,cProfile;cProfile.run(sys.stdin.read())'
+endfunction
 nnoremap <leader>7 :call PyProfile()<CR>
 
 " GIT
@@ -467,14 +502,14 @@ nnoremap <leader>7 :call PyProfile()<CR>
 
 " Call git log on project of current buffer.
 " Runs app if command provided.
-" Pass empty string to get normal git log
+" Pass empty string to get normal! git log
 function! GitLog(app)
     let bufferpath = expand("%:p:h")
     let command = 'cd ' . bufferpath . ';git log --graph --abbrev --decorate --oneline --graph'
     echo command
     if a:app == ""
         if has('nvim')
-            sp | ene | call Temp_buffer()
+            sp | ene | call TempBuffer()
             exe "terminal " . command
         else
             exe '! ' . command
@@ -493,7 +528,7 @@ function! GitStatus()
     exe '! cd ' . bufferpath . ' && git status'
 endfunction
 
-" Use normal python log
+" Use normal git log
 nnoremap <leader>6 :call GitStatus() <bar> call GitLog("")<CR>
 " Launch GUI git log
 nnoremap <F6> :call GitLog("gitg")<CR>
@@ -518,5 +553,3 @@ if has("nvim")
     nnoremap K :call KeywordNvim()<CR>
     vnoremap K <Esc>:call KeywordNvim()<CR>
 endif
-
-
