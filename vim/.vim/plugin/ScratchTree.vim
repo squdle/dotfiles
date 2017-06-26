@@ -48,7 +48,7 @@ function! BrowseProjectPreviewToggle()
 endfunction
 
 function! BrowseProjectTreeKeyMap()
-    exe 'nnoremap <buffer> ' . g:scratch_tree_open . ' :call BrowseProjectOpenFile() <bar> call BrowseProjectKillPreview()<CR>'
+    exe 'nnoremap <buffer> ' . g:scratch_tree_open . ' :call BrowseProjectOpenFile()<CR>:call BrowseProjectKillPreview()<CR>'
     exe 'nnoremap <buffer> ' . g:scratch_tree_jump . ' :call BrowseProjectFilepathJump()<CR>'
     exe 'nnoremap <buffer> ' . g:scratch_tree_preview_toggle . ' :call BrowseProjectPreviewToggle()<CR>'
     for i in [1, 2, 3, 4, 5, 6, 7, 8, 9]
