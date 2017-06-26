@@ -4,41 +4,31 @@
 " ========
 " Turn of vi compatible
 set nocompatible
-
 " plugins.
 filetype plugin on
-
 " syntax default off
 syntax off
-
 " Use space as leader key.
 let mapleader=" "
-
 " Use relative numbers  and number for current line.
-" (modern vim versions allow both simultaneous).
+" (modern vim versions allow both simultaneously).
 set relativenumber
 set number
-
 " Highlight search options
 set nohls
 set incsearch
-
 " Avoid having to reach for esc key.
 inoremap jj <Esc>
-
 " Use swapfiles but store them out of the way of harm / annoyance.
 set swapfile
 set dir=~/tmp
-
 " Allow filetypes for specific snippets, text objects, etc.
 filetype on
-
 " Swap ; and : for faster ex mode.
 nnoremap : ;
 nnoremap ; :
 vnoremap : ;
 vnoremap ; :
-
 " Work to 80 and/or 120 columns and don't wrap text by default,
 set colorcolumn=80,120
 set nowrap
@@ -46,27 +36,22 @@ set nowrap
 set textwidth=79
 " But don't force new lines if we go over.
 set wrapmargin=0
-
 " Spaces instead of tabs please.
 set tabstop=8
 set expandtab
 set softtabstop=4
 set shiftwidth=4
 filetype indent on
-
 " Stop neovim messing with macros (used different default values to vim).
 set formatoptions=tcq
-
 " Fuzzy file searching
 set path=$PWD/**
 set wildmenu
 set wildmode=longest:full,full
-
 " reload .vimrc on save
 autocmd! bufwritepost .vimrc source %
 " Edit vimrc quickly
 nnoremap ;rc :vs ~/.vimrc<CR>
-
 " Toggle settings.
 nnoremap ;- :set colorcolumn=<CR>
 nnoremap ;= :set colorcolumn=80,120<CR>
@@ -75,7 +60,6 @@ nnoremap ;9 :set number!<CR>
 nnoremap ;8 :set wrap!<CR>
 nnoremap ;7 :syntax on<CR>
 nnoremap ;6 :syntax off<CR>
-
 set encoding=utf-8  " The encoding displayed.
 set fileencoding=utf-8  " The encoding written to file.
 set fileformat=unix " unix line endings
@@ -133,9 +117,9 @@ function! Transparent_toggle()
 endfunction
 
 " Switch color schemes on the fly.
-nnoremap 1\ :call TermGuiColors()<CR>
-nnoremap 2\ :call CTermColors()<CR>
-nnoremap 3\ :call Transparent_toggle()<CR>
+nnoremap ;1 :call TermGuiColors()<CR>
+nnoremap ;2 :call CTermColors()<CR>
+nnoremap ;3 :call Transparent_toggle()<CR>
 
 " Blink cursor - useful for when you loose your cursor or demonstrations.
 function! BlinkPosition()
@@ -148,40 +132,74 @@ function! BlinkPosition()
 endfunction
 nnoremap \ :call BlinkPosition()<CR>
 
+" STARTUP
+" =======
+" Skip lockscreen.
+set shortmess+=I
+" Run custom behaviour on startup.
+" This is a bit experimental and git doesn't like it!
+"function! Startup()
+"    w ! echo "" && cat ~/.config/splash && echo ""
+"    sleep 1000m
+"endfunction
+" autocmd VimEnter  * :call Startup()
+
 " AUTOCOMPLETE
 " ============
 " Basic tab auto completion in insert mode, see |ins-completion| for more.
-
 " Tab completion (may need to generate tags).
 inoremap <tab> <C-n>
-
 " Regenerate ctags for current working directory
 " vim may complain if tags doesn't exist for the above tab completion command.
 nnoremap ;t :!ctags -R<CR>
 
 " GENERAL HOTKEYS (any filetype / programming language)
 " ===============
-" enclose "quotes"
+" increment/decrement ascii values linewise from selection
+vnoremap <C-A> :s/./\=nr2char(char2nr(submatch(0))+1)/g<CR><Esc>
+vnoremap <C-X> v:'<,'>s/./\=nr2char(char2nr(submatch(0))-1)/g<CR><Esc>
+" Move selection up / down
+vnoremap <C-j> dp`[V`]
+vnoremap <C-k> dkP`[V`]
+nnoremap <C-j> Vdp`[V`]
+nnoremap <C-k> VdkP`[V`]
+" Goto last pasted (like gv for last visual)
+nnoremap gp `[V`] 
+" Enclose "quotes"
 nnoremap <leader>" lbi"<Esc>ea"<Esc> 
 nnoremap <leader>' lbi'<Esc>ea'<Esc> 
 
-" UTILITY FUNCTIONS
-" =================
+" NAVIGATION
+" ==========
+" Make netrw less ugly for when we do want it.
+let g:netrw_banner=0
 
-" Remove all blank lines in the file
-function! RemoveBlankLines()
-   g/^$/d
-   normal! gg
-endfunction
+" Open file browser in current split (if no unsaved changes).
+nnoremap ;; :call BrowseProjectTree(3, getcwd(), 0)<CR>
+" Open current directory in current split (if no unsaved changes).
+nnoremap ;. :call BrowseProjectTree(1, expand("%:p:h"), 1)<CR>
+" Open parent directory in current split (if no unsaved changes).
+nnoremap ;, :call BrowseProjectTree(3, expand("%:p:h") . '/..', 1)<CR>
+" Open in split window
+nnoremap ;<leader> :vs <bar> call BrowseProjectTree(5, getcwd(), 1)<CR>
+" Keymappings for scratch tree navigation.
 
-" Make buffer temporary (No warning when closing with unsaved changes).
-function! TempBuffer()
-    setlocal buftype=nofile noswapfile bufhidden=delete
-endfunction
+" Open file
+let g:scratch_tree_open = '<CR>'
+" Open file
+let g:scratch_tree_jump = '.'
+" Fallback to 3 levels when opening a folder
+let g:scratch_tree_default_level = 3
+" Toggle file preview
+let g:scratch_tree_preview_toggle = 'p'
+" File preview on/off by default
+let g:scratch_tree_preview_on = 1
+" File preview height
+let g:scratch_tree_preview_height = 10
+" File preview height
+let g:scratch_tree_preview_margin = 1
 
-" SNIPPETS
 " ========
-
 " Search and replace for snippets.
 " Looks for and replaces all instances of double 'bang' enclosed keyword:
 " !!keyword!!
@@ -199,10 +217,24 @@ nnoremap <leader>sh :r ~/.vim/snippets/sh/template<CR>kdd
 " (py)thon
 nnoremap <leader>py :r ~/.vim/snippets/python/template.py<CR>kdd
 
-" RUN / EXECUTE (in shell)
-" =============
+" ----------------------------------------------------------------------------
+" FILETYPE SPECIFIC
+" ----------------------------------------------------------------------------
+
+" SH / SHELL
+" ==========
+
+" snippets
+" --------
+autocmd FileType sh nnoremap <leader>t :r ~/.vim/snippets/sh/template<CR>kdd
+autocmd FileType sh nnoremap <leader>i :r ~/.vim/snippets/sh/if<CR>
+
+" Run / execute
+" -------------
 vnoremap <CR> y:r ! <C-r>"<CR>
 nnoremap ;<CR> mxggVG: ! sh <CR>ggVG"yyu:bel split <bar> ene <CR>"yp:call TempBuffer()<CR>:file result<CR><C-w><C-p>`x
+
+" ----------------------------------------------------------------------------
 
 " PYTHON
 " ======
@@ -274,82 +306,14 @@ autocmd FileType python nnoremap <leader>4 :call PyDebug()<CR>
 " -------------
 " Run python code on entire file.
 autocmd FileType python nnoremap <F5> g:%w !python<CR>
-autocmd FileType python nnoremap ;<CR> g:%w !python<CR>
 " Run python but ignore debug
 autocmd FileType python nnoremap <leader>5 :%w !grep -v 'DEBUG' <bar> python<CR>
 " Run python on selection
 autocmd FileType python vnoremap <F5> :read '<.'>!python<CR>
 autocmd FileType python vnoremap <CR> :read '<.'>!python<CR>
 
-" NAVIGATION
-" ==========
-
-" Make netrw less ugly for when we do need it.
-let g:netrw_banner=0
-
-" Plain text tree file browser
-" ----------------------------
-" Make a buffer from the tree command for quick simple file browsing.
-"
-" Create buffer :
-" ;;        - Browse from project directory (cwd).
-" ;.        - Browse from current file directory.
-"
-" Navigate buffer :
-" <CR>      - Follow links. Falls back to netrw if folder selected.
-" 0 - 9     - Recreate buffer with different tree level, 0 = all.
-
-function! BrowseProjectTree(depth)
-    enew 
-    set nowrap
-    if a:depth == 0
-        let l:tree = 'tree --noreport -a'
-        let l:files = 'tree -fi --noreport -a'
-        let command = 'read ! ' . l:tree . ';' . l:files
-        exe command
-    else
-        let l:tree = 'tree --noreport -a -L ' . a:depth 
-        let l:files = 'tree -fi --noreport -a -L ' .  a:depth
-        let command = 'read ! ' . l:tree . ';' . l:files
-        exe command
-    endif
-    let g:offset =  line(".") / 2 
-    normal! ggddG
-    exe 'normal! ' . g:offset . 'G'
-    normal! mx
-    normal! gg
-    " Temporarily remap carriage return to open a selected absolute filename.
-    nnoremap <buffer> <CR> :exe 'normal! ' . (g:offset + line(".")) . 'Ggf'<CR>
-    nnoremap <buffer> n :exe 'normal! ' . (g:offset + line(".")) . 'G'<CR>
-    nnoremap <buffer> N :exe 'normal! ' . (line(".") - g:offset) . 'G'<CR>
-    for i in [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        exe 'nnoremap <buffer>' i ':call BrowseProjectTree('i')<CR>'
-    endfor
-    nnoremap <buffer> 0 :call BrowseProjectTree(0)<CR>
-    call TempBuffer()
-endfunction
-nnoremap ;; :call BrowseProjectTree(1)<CR>
-nnoremap ;<leader> :vsplit <bar> call BrowseProjectTree(3)<CR>
-
-
-" STARTUP
-" =======
-
-" Skip lockscreen
-set shortmess+=I
-
-" Run specific behaviour on startup.
-function! Startup()
-    w ! echo "" && cat ~/.config/splash && echo ""
-    sleep 1000m
-endfunction
-autocmd VimEnter  * :call Startup()
-
-" PYTHON
-" ======
-
-" Horizontal / vertical arguments
-" -------------------------------
+" Formatting
+" ----------
 " Horizontal arguments ( )
 nnoremap <leader>9 vi)2:s/[\n<bar> ]//g<CR>:.s/ //g<CR>V:s/,/, /g<CR>kgJ
 " Vertical arguments ( )
@@ -362,7 +326,6 @@ nnoremap <leader>] "xdi]my^"zy0`yi<CR><Esc>"xgPi<CR><Esc>"zgPk:.s/ /\=@z/g<CR>I 
 nnoremap <leader>{ vi}2:s/[\n<bar> ]//g<CR>:.s/ //g<CR>V:s/,/, /g<CR>kgJ
 " Vertical arguments { }
 nnoremap <leader>} "xdi}my^"zy0`yi<CR><Esc>"xgPi<CR><Esc>"zgPk:.s/ /\=@z/g<CR>I    <Esc>"zgP:.s/,/,\r    /g<CR>
-
 " Horizontal function definition parameters
 nnoremap <leader>( vi):s/,\n/,/g<CR>:s/ //g<CR>V:s/,/, /g<CR>kgJ
 " Vertical function definition parameters
@@ -377,7 +340,6 @@ autocmd FileType python vnoremap af <Esc>$?^ *def <CR>V/\v\n^$\n^$<bar>\n^$\n.*d
 autocmd FileType python omap af :normal! Vaf<CR>
 autocmd FileType python vnoremap if <Esc>$?^ *def <CR>/):<CR>j0v/\v\n^$\n^$<bar>\n^$\n.*def.*\(<bar>.*%$<CR>V
 autocmd FileType python omap if :normal! Vif<CR>
-
 " Class
 autocmd FileType python vnoremap ac j:<C-U>silent! ?class <CR>V/\n^$\n^$\<bar>\%$<CR>
 autocmd FileType python omap ac :normal! Vac<CR>
@@ -385,62 +347,13 @@ autocmd FileType python vnoremap ic j:<C-U>silent! ?class <CR>jV/\n^$\n^$\<bar>\
 autocmd FileType python omap ic :normal! Vic<CR>
 
 " Folds
-" =====
+" -----
 " Simple single level folding <C-f> to fold all, zE to unfold all.
-autocmd FileType python nnoremap <C-f> mxzE:g/^ *def.*(/:normal! jzfif<CR>:g/^ *class /:normal! jzfic<CR>`x
+autocmd FileType python nnoremap <C-f> mxzEgg:g/^ *def.*(/:normal! jzfif<CR>:g/^ *class /:normal! jzfic<CR>`x
 
-" SH / SHELL
-" ==========
-autocmd FileType sh nnoremap <leader>t :r ~/.vim/snippets/sh/template<CR>kdd
-autocmd FileType sh nnoremap <leader>i :r ~/.vim/snippets/sh/if<CR>
-
-" WIP
-" ===
-
-" increment/decrement ascii values linewise from selection
-vnoremap <C-A> :s/./\=nr2char(char2nr(submatch(0))+1)/g<CR><Esc>
-vnoremap <C-X> v:'<,'>s/./\=nr2char(char2nr(submatch(0))-1)/g<CR><Esc>
-
-" Move selection up / down
-vnoremap <C-j> dp`[V`]
-vnoremap <C-k> dkP`[V`]
-nnoremap <C-j> Vdp`[V`]
-nnoremap <C-k> VdkP`[V`]
-
-" Goto last pasted (like gv for last visual)
-nnoremap gp `[V`] 
-
-" Enclose "quotes"
-nnoremap <leader>" lbi"<Esc>ea"<Esc> 
-nnoremap <leader>' lbi'<Esc>ea'<Esc> 
 
 " Pep8 and Linting
 " ----------------
-
-function! CopyAllToTempBuffer()
-    normal! mxggyG`x
-    vs | ene
-    call TempBuffer()
-    normal! pggdd
-endfunction
-
-" Check if a test has passed by looking for an empty buffer.
-function! CheckTestPass(message, stay)
-    let line=getline(".")
-    if line == ""
-        close
-        redraw
-        echo a:message
-    else
-        redraw
-        normal! vv
-        if a:stay != 1
-            wincmd p
-        endif
-    endif
-endfunction
-
-
 function! Remap_tmp_CR_debug_jump()
 " Temporarily remap carriage return to open a selected filename.
     nnoremap <buffer> <CR> $?stdin:P/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>
@@ -450,8 +363,7 @@ function! Remap_tmp_CR_debug_jump_close()
     nnoremap <buffer> <CR> $?stdin:<CR>/\d<CR>"xyw:wincmd p<CR>:<C-r>x<CR>:wincmd p<bar>bd<CR>
 endfunction
 
-" Lint code tries to use flake8, then pycodestyle / pep8
-
+" Lint code tries to use flake8, then falls back to pycodestyle / pep8
 function! PyLint()
     call CopyAllToTempBuffer()
     normal! VG
@@ -463,7 +375,6 @@ function! PyLint()
     call Remap_tmp_CR_debug_jump_close()
     call CheckTestPass("Linter pass", 1)
 endfunction
-autocmd FileType python nnoremap <leader>1 :call PyLint()<CR>
 
 " Check docstring style. Looks for pydocstyle then pep257 
 function! PyDocStyle()
@@ -477,8 +388,6 @@ function! PyDocStyle()
     call Remap_tmp_CR_debug_jump_close()
     call CheckTestPass("Docstyle pass", 1)
 endfunction
-autocmd FileType python nnoremap <leader>2 :call PyDocStyle()<CR>
-nnoremap <leader>2 :call PyDocStyle()<CR>
 
 " Automatically change code to pep8 (requires autopep8)
 function! AutoPep8()
@@ -486,10 +395,14 @@ function! AutoPep8()
     %! python -m autopep8 --max-line-length 79 -a -a -a -a --pep8-passes 2000 -
     normal! vv`x
 endfunction
+
+autocmd FileType python nnoremap <leader>1 :call PyLint()<CR>
+autocmd FileType python nnoremap <leader>2 :call PyDocStyle()<CR>
 autocmd FileType python nnoremap <leader>3 :call AutoPep8()<CR>
 
 " Profiling
 " -------
+" Run cProfile on current buffer
 function! PyProfile()
     call CopyAllToTempBuffer()
     %! python -c 'import sys,cProfile;cProfile.run(sys.stdin.read())'
@@ -498,11 +411,9 @@ nnoremap <leader>7 :call PyProfile()<CR>
 
 " GIT
 " ---
-"View git log
 
-" Call git log on project of current buffer.
-" Runs app if command provided.
-" Pass empty string to get normal! git log
+" Call git log on project of current buffer. Runs app if command provided.
+" Pass empty string to get a text based git log.
 function! GitLog(app)
     let bufferpath = expand("%:p:h")
     let command = 'cd ' . bufferpath . ';git log --graph --abbrev --decorate --oneline --graph'
@@ -535,7 +446,6 @@ nnoremap <F6> :call GitLog("gitg")<CR>
 
 " NVIM SPECIFIC
 " -------------
-
 " In nvim, open keyword/help in new terminal,
 " as nvim doesn't currently allow terminal scrollback.
 function! KeywordNvim()
@@ -548,7 +458,6 @@ function! KeywordNvim()
     vsplit | enew
     exe 'terminal ' . l:man l:wordUnderCursor
 endfunction
-
 if has("nvim")
     nnoremap K :call KeywordNvim()<CR>
     vnoremap K <Esc>:call KeywordNvim()<CR>

@@ -6,7 +6,7 @@ charge="$(acpi -b 2>/dev/null | cut -d " " -f4 | sed s/%.*$//)"
 if  [ "`acpi -a 2>/dev/null | grep 'on'`"  != '' ]; then
     charge+="%(charging)"
 elif [ "${charge}" -lt 20 ] ; then
-    charge+="% WARNING! "
+    charge+="% < < < WARNING! > > > "
 else
     charge+="%"
 fi
