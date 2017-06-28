@@ -1,5 +1,5 @@
-" ScratchTree - A plain text tree file browser
 " ------------------------------------------
+" ScratchTree - A plain text tree file browser
 " Make a buffer from the tree command for quick simple file browsing.
 "
 " Create buffer :
@@ -55,14 +55,11 @@ function! BrowseProjectTreeKeyMap()
         exe 'nnoremap <buffer>' i ':call BrowseProjectDepth('i')<CR>'
     endfor
     nnoremap <buffer> 0 :call BrowseProjectDepth(0)<CR>
-    "exe 'nnoremap <buffer> ' . 'k k' . ':call BrowseProjectPreview()<CR>'
-    "exe 'nnoremap <buffer> ' . 'j j' . ':call BrowseProjectPreview()<CR>'
 endfunction
 
 " Recreate project tree at specified depth.
 function! BrowseProjectDepth(depth)
     normal! ggdG
-
     let l:root = 'cd ' . b:root 
     if a:depth == 0
         let l:tree = 'tree --noreport -a'
@@ -116,7 +113,7 @@ function! BrowseProjectTree(depth, root, jump_current)
     endif
     setlocal cursorline
     call BrowseProjectPreview()
-    autocmd WinLeave,QuitPre,BufHidden,BufDelete,BufUnload "ScratchTree:" call BrowseProjectKillPreview()
+    autocmd BufDelete,BufUnload "ScratchTree:" call BrowseProjectKillPreview()
     autocmd CursorMoved <buffer> call BrowseProjectPreview()
 endfunction
 
@@ -138,19 +135,19 @@ function! BrowseProjectPreview()
         return ''
     endif
     call BrowseProjectKillPreview()
+    let l:lineno = line(".")
     normal! mx
-    if getline(".") == "."
-        "return ''
+    if b:tree_offset >= l:lineno
+        exe 'normal! ' . (b:tree_offset + l:lineno) . 'G'
     endif
-    if b:tree_offset >= line(".")
-        exe 'normal! ' . (b:tree_offset + line(".")) . 'G'
-    endif
-    if match(getline("."), "->") != -1
+    let l:line = getline(".")
+    if match(l:line, "->") != -1
         s/[^/]*\s*->\s*//
     endif
-    if filereadable(getline("."))
+    if filereadable(l:line)
         "exe 'w ! head -n ' . g:scratch_tree_preview_height getline(".") . ' || ls ' . getline(".")
-        let l:command = '-1r ! head -n ' . g:scratch_tree_preview_height . ' "' . getline(".") . '"'
+        "let l:command = '-1r ! head -n ' . g:scratch_tree_preview_height . ' "' . l:line . '"'
+        let l:command = 'r ! head ' . ' "' . l:line . '"'
         split | ene | call TempBuffer()
         exe 'resize ' . (g:scratch_tree_preview_height + g:scratch_tree_preview_margin)
         normal! gg

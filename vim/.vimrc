@@ -83,7 +83,9 @@ function! CTermColors()
     "Inform vim that we're probably using a dark theme.
     set background=dark 
     " Turn of gui colors
-    set notermguicolors
+    if has("termguicolors")
+        set notermguicolors
+    endif
     syntax off
     "Try to load color scheme
     try
